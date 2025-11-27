@@ -19,9 +19,6 @@ public class WhatsAppController {
         this.wahaClient = wahaClient;
     }
     
-    @PostMapping("/session/start/{sessionId}")
-    public Mono<String> startSession(@PathVariable String sessionId) {
-        return wahaClient.startSession(sessionId);
     // ==========================
     // SESSION MANAGEMENT
     // ==========================
