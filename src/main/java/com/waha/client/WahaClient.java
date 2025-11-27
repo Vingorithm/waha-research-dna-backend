@@ -16,6 +16,7 @@ public class WahaClient {
             @Value("${waha.base-url}") String baseUrl,
             @Value("${waha.api-key}") String apiKey
     ) {
+        System.out.println("DEBUG WahaClient baseUrl=" + baseUrl + " apiKey=" + (apiKey != null ? "SET" : "NULL"));
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader("X-Api-Key", apiKey) // penting!
