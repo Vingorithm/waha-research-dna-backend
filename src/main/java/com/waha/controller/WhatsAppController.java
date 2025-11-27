@@ -15,12 +15,12 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/wa")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/api/wa")
 public class WhatsAppController {
 
-    private final WahaClient wahaClient = null;
+    private final WahaClient wahaClient;
 
     @PostMapping("/session/start/{sessionId}")
     public Mono<String> startSession(@PathVariable String sessionId) {
@@ -33,13 +33,20 @@ public class WhatsAppController {
         return wahaClient.getScreenshotBase64(sessionId);
     }
 
+    @GetMapping("/test")
+    public Mono<String> test() {
+        // kita balikan base64 image
+        return Mono.just("Test endpoint is working!");
+        // return wahaClient.getScreenshotBase64(sessionId);
+    }
+
     @PostMapping("/message/send")
     public Mono<String> sendMessage(@RequestBody SendMessageRequest request) {
         // Konversi phone → chatId
         // Misal input: 6281234567890 → 6281234567890@c.us
         String chatId = request.getPhone() + "@c.us";
         return wahaClient.sendText(
-                request.getSessionId(),
+                request.getSession(),
                 chatId,
                 request.getMessage()
         );

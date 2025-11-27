@@ -1,9 +1,9 @@
-package com.waha.project_backend;
+package com.waha;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
 @SpringBootApplication
+
 public class ProjectBackendApplication {
 
 	public static void main(String[] args) {
