@@ -10,18 +10,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.waha.client.WahaClient;
 import com.waha.dto.SendMessageRequest;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/wa")
 public class WhatsAppController {
 
     private final WahaClient wahaClient;
 
+    public WhatsAppController(WahaClient wahaClient) {
+        this.wahaClient = wahaClient;
+    }
+    
     @PostMapping("/session/start/{sessionId}")
     public Mono<String> startSession(@PathVariable String sessionId) {
         return wahaClient.startSession(sessionId);
