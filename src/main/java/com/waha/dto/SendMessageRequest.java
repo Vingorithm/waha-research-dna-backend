@@ -26,6 +26,4 @@ public class SendMessageRequest {
 	public void setMessage(String message) {
 		this.message = message;
 	}
-    
-    
 }
