@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
 @CrossOrigin(origins = "http://localhost:4200")
 public class WhatsAppController {
 
-    private final WahaClient wahaClient;
+    private final WahaClient wahaClient = null;
 
     @PostMapping("/session/start/{sessionId}")
     public Mono<String> startSession(@PathVariable String sessionId) {
