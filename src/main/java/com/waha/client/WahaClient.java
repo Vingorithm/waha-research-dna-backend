@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Base64;
 import java.util.Map;
 
 @Service
@@ -24,7 +23,7 @@ public class WahaClient {
     }
 
     /**
-     * START (scan QR)
+     * START
      */
         public Mono<String> startSession() {
         return webClient.post()
@@ -33,6 +32,15 @@ public class WahaClient {
                 .bodyToMono(String.class);
         }
 
+    /**
+     * LOGOUT nomor dari WA (disconnect)
+     */
+        public Mono<String> stopSession() {
+        return webClient.post()
+                .uri("/api/sessions/{session}/stop", "default")
+                .retrieve()
+                .bodyToMono(String.class);
+        }
 
     /**
      * LOGOUT nomor dari WA (disconnect)

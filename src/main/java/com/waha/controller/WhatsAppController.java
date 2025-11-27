@@ -2,7 +2,6 @@ package com.waha.controller;
 
 import com.waha.client.WahaClient;
 import com.waha.dto.SendMessageRequest;
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +25,11 @@ public class WhatsAppController {
     @PostMapping("/session/start")
     public Mono<String> startSession() {
         return wahaClient.startSession();
+    }
+
+    @PostMapping("/session/stop")
+    public Mono<String> stopSession() {
+        return wahaClient.stopSession();
     }
 
     @PostMapping("/session/logout")
