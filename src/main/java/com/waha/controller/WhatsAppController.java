@@ -1,15 +1,11 @@
 package com.waha.controller;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.waha.client.WahaClient;
 import com.waha.dto.SendMessageRequest;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -26,30 +22,55 @@ public class WhatsAppController {
     @PostMapping("/session/start/{sessionId}")
     public Mono<String> startSession(@PathVariable String sessionId) {
         return wahaClient.startSession(sessionId);
+    // ==========================
+    // SESSION MANAGEMENT
+    // ==========================
+
+    @PostMapping("/session/start")
+    public Mono<String> startSession() {
+        return wahaClient.startSession();
     }
 
-    @GetMapping("/session/qr/{sessionId}")
-    public Mono<String> getSessionQr(@PathVariable String sessionId) {
-        // kita balikan base64 image
-        return wahaClient.getScreenshotBase64(sessionId);
+    @PostMapping("/session/logout")
+    public Mono<String> logout() {
+        return wahaClient.logoutSession();
+    }
+
+    @GetMapping("/session/status")
+    public Mono<String> getStatus() {
+        return wahaClient.getStatus();
+    }
+
+    // ==========================
+    // QR CODE
+    // ==========================
+
+    @GetMapping(
+            value = "/session/{sessionId}/qr",
+            produces = MediaType.IMAGE_PNG_VALUE
+    )
+    public Mono<byte[]> getQr(@PathVariable String sessionId) {
+        return wahaClient.getQrBytes(sessionId);
+    }
+
+    // ==========================
+    // SEND MESSAGE
+    // ==========================
+
+    @PostMapping("/message/send")
+    public Mono<String> sendMessage(@RequestBody SendMessageRequest req) {
+
+        if (req.getPhone() == null || req.getMessage() == null) {
+            return Mono.error(new IllegalArgumentException("phone dan message wajib diisi"));
+        }
+
+        String chatId = req.getPhone() + "@c.us";
+
+        return wahaClient.sendText(chatId, req.getMessage());
     }
 
     @GetMapping("/test")
     public Mono<String> test() {
-        // kita balikan base64 image
         return Mono.just("Test endpoint is working!");
-        // return wahaClient.getScreenshotBase64(sessionId);
-    }
-
-    @PostMapping("/message/send")
-    public Mono<String> sendMessage(@RequestBody SendMessageRequest request) {
-        // Konversi phone → chatId
-        // Misal input: 6281234567890 → 6281234567890@c.us
-        String chatId = request.getPhone() + "@c.us";
-        return wahaClient.sendText(
-                request.getSession(),
-                chatId,
-                request.getMessage()
-        );
     }
 }
