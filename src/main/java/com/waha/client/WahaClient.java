@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.Base64;
 import java.util.Map;
 
 @Service
@@ -16,32 +17,51 @@ public class WahaClient {
             @Value("${waha.base-url}") String baseUrl,
             @Value("${waha.api-key}") String apiKey
     ) {
-        System.out.println("DEBUG WahaClient baseUrl=" + baseUrl + " apiKey=" + (apiKey != null ? "SET" : "NULL"));
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
-                .defaultHeader("X-Api-Key", apiKey) // penting!
+                .defaultHeader("X-Api-Key", apiKey)
                 .build();
     }
 
     /**
-     * Start session WAHA (POST /api/sessions)
+     * START (scan QR)
      */
-    public Mono<String> startSession(String sessionName) {
+        public Mono<String> startSession() {
         return webClient.post()
+                .uri("/api/sessions/{session}/start", "default")
+                .retrieve()
+                .bodyToMono(String.class);
+        }
+
+
+    /**
+     * LOGOUT nomor dari WA (disconnect)
+     */
+        public Mono<String> logoutSession() {
+        return webClient.post()
+                .uri("/api/sessions/{session}/logout", "default")
+                .retrieve()
+                .bodyToMono(String.class);
+        }
+
+    /**
+     * CHECK status session
+     */
+    public Mono<String> getStatus() {
+        return webClient.get()
                 .uri("/api/sessions")
-                .bodyValue(Map.of("name", sessionName))
                 .retrieve()
                 .bodyToMono(String.class);
     }
 
     /**
-     * Kirim pesan text (POST /api/sendText)
+     * SEND MESSAGE
      */
-    public Mono<String> sendText(String sessionName, String chatId, String text) {
+    public Mono<String> sendText(String chatId, String text) {
         return webClient.post()
                 .uri("/api/sendText")
                 .bodyValue(Map.of(
-                        "session", sessionName,
+                        "session", "default",
                         "chatId", chatId,
                         "text", text
                 ))
@@ -50,17 +70,12 @@ public class WahaClient {
     }
 
     /**
-     * Ambil screenshot (QR / tampilan WA) (GET /api/screenshot?session=...)
-     * Kita balikan sebagai Base64 string ke FE.
+     * QR RAW Bytes (untuk image/png)
      */
-    public Mono<String> getScreenshotBase64(String sessionName) {
+    public Mono<byte[]> getQrBytes(String sessionName) {
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/screenshot")
-                        .queryParam("session", sessionName)
-                        .build())
+                .uri("/api/{session}/auth/qr", sessionName)
                 .retrieve()
-                .bodyToMono(byte[].class)
-                .map(bytes -> java.util.Base64.getEncoder().encodeToString(bytes));
+                .bodyToMono(byte[].class);
     }
 }
