@@ -1,11 +1,14 @@
 package com.waha.client;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.util.Map;
+import com.waha.dto.StatusTextRequest;
+
+import reactor.core.publisher.Mono;
 
 @Service
 public class WahaClient {
@@ -85,5 +88,16 @@ public class WahaClient {
                 .uri("/api/{session}/auth/qr", sessionName)
                 .retrieve()
                 .bodyToMono(byte[].class);
+    }
+    
+    /*
+     *  Send Status Text 
+     */
+    public Mono<String> sendStatusText(String session, StatusTextRequest req) {
+        return webClient.post()
+                .uri("/api/" + session + "/status/text")
+                .bodyValue(req)
+                .retrieve()
+                .bodyToMono(String.class);
     }
 }

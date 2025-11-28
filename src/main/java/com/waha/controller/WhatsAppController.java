@@ -1,10 +1,18 @@
 package com.waha.controller;
 
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.waha.client.WahaClient;
 import com.waha.dto.SendMessageRequest;
+import com.waha.dto.StatusTextRequest;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -68,6 +76,18 @@ public class WhatsAppController {
         String chatId = req.getPhone() + "@c.us";
 
         return wahaClient.sendText(chatId, req.getMessage());
+    }
+    
+    // ==========================
+    // SEND STATUS TEXT
+    // ==========================
+
+    @PostMapping("/{session}/status/text")
+    public Mono<String> sendStatusText(
+            @PathVariable String session,
+            @RequestBody StatusTextRequest request
+    ) {
+        return wahaClient.sendStatusText(session, request);
     }
 
     @GetMapping("/test")
