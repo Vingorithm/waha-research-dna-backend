@@ -81,6 +81,48 @@ public class WahaClient {
     }
 
     /**
+     * SEND SEEN
+     */
+    public Mono<String> sendSeen(String chatId) {
+        return webClient.post()
+                .uri("/api/sendSeen")
+                .bodyValue(Map.of(
+                        "session", "default",
+                        "chatId", chatId
+                ))
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
+    /**
+     * Start Typing
+     */
+    public Mono<String> startTyping(String chatId) {
+        return webClient.post()
+                .uri("/api/startTyping")
+                .bodyValue(Map.of(
+                        "session", "default",
+                        "chatId", chatId
+                ))
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
+    /**
+     * stop Typing
+     */
+    public Mono<String> stopTyping(String chatId) {
+        return webClient.post()
+                .uri("/api/stopTyping")
+                .bodyValue(Map.of(
+                        "session", "default",
+                        "chatId", chatId
+                ))
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
+    /**
      * QR RAW Bytes (untuk image/png)
      */
     public Mono<byte[]> getQrBytes(String sessionName) {

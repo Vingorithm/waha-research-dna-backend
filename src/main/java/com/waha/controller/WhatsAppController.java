@@ -1,5 +1,7 @@
 package com.waha.controller;
 
+import java.time.Duration;
+
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +27,7 @@ public class WhatsAppController {
     public WhatsAppController(WahaClient wahaClient) {
         this.wahaClient = wahaClient;
     }
-    
+
     // ==========================
     // SESSION MANAGEMENT
     // ==========================
@@ -54,10 +56,7 @@ public class WhatsAppController {
     // QR CODE
     // ==========================
 
-    @GetMapping(
-            value = "/session/{sessionId}/qr",
-            produces = MediaType.IMAGE_PNG_VALUE
-    )
+    @GetMapping(value = "/session/{sessionId}/qr", produces = MediaType.IMAGE_PNG_VALUE)
     public Mono<byte[]> getQr(@PathVariable String sessionId) {
         return wahaClient.getQrBytes(sessionId);
     }
@@ -75,9 +74,52 @@ public class WhatsAppController {
 
         String chatId = req.getPhone() + "@c.us";
 
-        return wahaClient.sendText(chatId, req.getMessage());
+        return wahaClient.sendSeen(chatId)
+                .then(wahaClient.startTyping(chatId))
+                // delay non-blocking, kira-kira 3 detik mengetik
+                .then(Mono.delay(Duration.ofSeconds(3)))
+                .then(wahaClient.stopTyping(chatId))
+                // terakhir baru benar-benar kirim pesan
+                .then(wahaClient.sendText(chatId, req.getMessage()))
+                .onErrorResume(e -> {
+                    System.out.println("Gagal sendText: " + e.getMessage());
+                    return Mono.error(e);
+                });
     }
-    
+
+    // @PostMapping("/message/sendSeen")
+    // public Mono<String> sendSeen(@RequestBody SendMessageRequest req) {
+    // if (req.getPhone() == null) {
+    // return Mono.error(new IllegalArgumentException("phone wajib diisi"));
+    // }
+
+    // String chatId = req.getPhone() + "@c.us";
+
+    // return wahaClient.sendSeen(chatId);
+    // }
+
+    // @PostMapping("/message/startTyping")
+    // public Mono<String> startTyping(@RequestBody SendMessageRequest req) {
+    // if (req.getPhone() == null) {
+    // return Mono.error(new IllegalArgumentException("phone wajib diisi"));
+    // }
+
+    // String chatId = req.getPhone() + "@c.us";
+
+    // return wahaClient.startTyping(chatId);
+    // }
+
+    // @PostMapping("/message/stopTyping")
+    // public Mono<String> stopTyping(@RequestBody SendMessageRequest req) {
+    // if (req.getPhone() == null) {
+    // return Mono.error(new IllegalArgumentException("phone wajib diisi"));
+    // }
+
+    // String chatId = req.getPhone() + "@c.us";
+
+    // return wahaClient.stopTyping(chatId);
+    // }
+
     // ==========================
     // SEND STATUS TEXT
     // ==========================
@@ -85,8 +127,7 @@ public class WhatsAppController {
     @PostMapping("/{session}/status/text")
     public Mono<String> sendStatusText(
             @PathVariable String session,
-            @RequestBody StatusTextRequest request
-    ) {
+            @RequestBody StatusTextRequest request) {
         return wahaClient.sendStatusText(session, request);
     }
 
