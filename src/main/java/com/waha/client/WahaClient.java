@@ -1,7 +1,6 @@
 package com.waha.client;
 
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,39 +24,30 @@ public class WahaClient {
                 .build();
     }
 
-    /**
-     * START
-     */
-        public Mono<String> startSession() {
+    // =============================
+    // SESSION
+    // =============================
+    public Mono<String> startSession() {
         return webClient.post()
                 .uri("/api/sessions/{session}/start", "default")
                 .retrieve()
                 .bodyToMono(String.class);
-        }
+    }
 
-    /**
-     * LOGOUT nomor dari WA (disconnect)
-     */
-        public Mono<String> stopSession() {
+    public Mono<String> stopSession() {
         return webClient.post()
                 .uri("/api/sessions/{session}/stop", "default")
                 .retrieve()
                 .bodyToMono(String.class);
-        }
+    }
 
-    /**
-     * LOGOUT nomor dari WA (disconnect)
-     */
-        public Mono<String> logoutSession() {
+    public Mono<String> logoutSession() {
         return webClient.post()
                 .uri("/api/sessions/{session}/logout", "default")
                 .retrieve()
                 .bodyToMono(String.class);
-        }
+    }
 
-    /**
-     * CHECK status session
-     */
     public Mono<String> getStatus() {
         return webClient.get()
                 .uri("/api/sessions")
@@ -65,9 +55,9 @@ public class WahaClient {
                 .bodyToMono(String.class);
     }
 
-    /**
-     * SEND MESSAGE
-     */
+    // =============================
+    // SEND MESSAGE
+    // =============================
     public Mono<String> sendText(String chatId, String text) {
         return webClient.post()
                 .uri("/api/sendText")
@@ -80,22 +70,22 @@ public class WahaClient {
                 .bodyToMono(String.class);
     }
 
-    /**
-     * QR RAW Bytes (untuk image/png)
-     */
-    public Mono<byte[]> getQrBytes(String sessionName) {
+    // =============================
+    // QR Code
+    // =============================
+    public Mono<byte[]> getQrBytes(String session) {
         return webClient.get()
-                .uri("/api/{session}/auth/qr", sessionName)
+                .uri("/api/{session}/auth/qr", session)
                 .retrieve()
                 .bodyToMono(byte[].class);
     }
-    
-    /*
-     *  Send Status Text 
-     */
+
+    // =============================
+    // STATUS TEXT
+    // =============================
     public Mono<String> sendStatusText(String session, StatusTextRequest req) {
         return webClient.post()
-                .uri("/api/" + session + "/status/text")
+                .uri("/api/{session}/status/text", session)
                 .bodyValue(req)
                 .retrieve()
                 .bodyToMono(String.class);

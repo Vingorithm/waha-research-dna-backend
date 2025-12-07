@@ -1,19 +1,16 @@
 package com.waha.controller;
 
+import java.util.Map;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import com.waha.client.WahaClient;
 import com.waha.dto.SendMessageRequest;
 import com.waha.dto.StatusTextRequest;
+import com.waha.event.WebhookBroadcaster;
 
-import reactor.core.publisher.Mono;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -25,73 +22,86 @@ public class WhatsAppController {
     public WhatsAppController(WahaClient wahaClient) {
         this.wahaClient = wahaClient;
     }
-    
-    // ==========================
-    // SESSION MANAGEMENT
-    // ==========================
 
+    // ==========================
+    // SESSION
+    // ==========================
     @PostMapping("/session/start")
-    public Mono<String> startSession() {
-        return wahaClient.startSession();
+    public String startSession() {
+        return wahaClient.startSession().block();
     }
 
     @PostMapping("/session/stop")
-    public Mono<String> stopSession() {
-        return wahaClient.stopSession();
+    public String stopSession() {
+        return wahaClient.stopSession().block();
     }
 
     @PostMapping("/session/logout")
-    public Mono<String> logout() {
-        return wahaClient.logoutSession();
+    public String logout() {
+        return wahaClient.logoutSession().block();
     }
 
     @GetMapping("/session/status")
-    public Mono<String> getStatus() {
-        return wahaClient.getStatus();
+    public String getStatus() {
+        return wahaClient.getStatus().block();
     }
 
     // ==========================
     // QR CODE
     // ==========================
-
-    @GetMapping(
-            value = "/session/{sessionId}/qr",
-            produces = MediaType.IMAGE_PNG_VALUE
-    )
-    public Mono<byte[]> getQr(@PathVariable String sessionId) {
-        return wahaClient.getQrBytes(sessionId);
+    @GetMapping(value = "/session/{sessionId}/qr", produces = MediaType.IMAGE_PNG_VALUE)
+    public byte[] getQr(@PathVariable String sessionId) {
+        return wahaClient.getQrBytes(sessionId).block();
     }
 
     // ==========================
-    // SEND MESSAGE
+    // SEND TEXT
     // ==========================
-
     @PostMapping("/message/send")
-    public Mono<String> sendMessage(@RequestBody SendMessageRequest req) {
-
-        if (req.getPhone() == null || req.getMessage() == null) {
-            return Mono.error(new IllegalArgumentException("phone dan message wajib diisi"));
-        }
-
+    public String sendMessage(@RequestBody SendMessageRequest req) {
         String chatId = req.getPhone() + "@c.us";
-
-        return wahaClient.sendText(chatId, req.getMessage());
+        return wahaClient.sendText(chatId, req.getMessage()).block();
     }
-    
-    // ==========================
-    // SEND STATUS TEXT
-    // ==========================
 
+    // ==========================
+    // STATUS TEXT
+    // ==========================
     @PostMapping("/{session}/status/text")
-    public Mono<String> sendStatusText(
+    public String sendStatusText(
             @PathVariable String session,
-            @RequestBody StatusTextRequest request
-    ) {
-        return wahaClient.sendStatusText(session, request);
+            @RequestBody StatusTextRequest request) {
+
+        return wahaClient.sendStatusText(session, request).block();
     }
 
+    // ==========================
+    // TEST
+    // ==========================
     @GetMapping("/test")
-    public Mono<String> test() {
-        return Mono.just("Test endpoint is working!");
+    public String test() {
+        return "Test endpoint OK";
+    }
+
+    // ==========================
+    // WEBHOOK (WAHA → BACKEND → SSE)
+    // ==========================
+    @PostMapping("/webhook")
+    public ResponseEntity<String> webhook(@RequestBody Map<String, Object> body) {
+
+        String event = (String) body.get("event");
+        Object data = body.get("payload"); // <--- ganti ke "payload"
+
+        WebhookBroadcaster.broadcast(event, data);
+
+        return ResponseEntity.ok("OK");
+    }
+
+
+    // ==========================
+    // SSE STREAM (BACKEND → ANGULAR)
+    // ==========================
+    @GetMapping(value = "/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter events() {
+        return WebhookBroadcaster.registerClient();
     }
 }
