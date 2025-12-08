@@ -89,13 +89,12 @@ public class WhatsAppController {
     public ResponseEntity<String> webhook(@RequestBody Map<String, Object> body) {
 
         String event = (String) body.get("event");
-        Object data = body.get("payload"); // <--- ganti ke "payload"
+        Object data = body.get("payload");
 
         WebhookBroadcaster.broadcast(event, data);
 
         return ResponseEntity.ok("OK");
     }
-
 
     // ==========================
     // SSE STREAM (BACKEND → ANGULAR)
